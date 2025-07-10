@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Recomendador de Café</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+</head>
+<body>
+    <h1 class="titulo">
+        ☕ Recomendador de Productos de Café
+    </h1>
+
+    <img src="{{ url_for('static', filename='images/Logo_Partdo.png') }}" 
+        alt="Decoración" 
+        style="position: fixed; bottom: 20px; right: 20px; width: 80px; z-index: 999; pointer-events: none;">
+
+        <form method="POST" class="mt-4" id="formulario">
+            <input type="text" name="nombre" id="nombre" class="form-control" placeholder="Escribe tu nombre o usuario" required autocomplete="off"><br>
+            
+            <div id="perfil_sabor_group" style="display: none;">
+                <label for="perfil">Selecciona hasta 3 sabores:</label>
+                <select name="perfil" id="perfil" class="form-select" multiple>
+                    <option value="dulce">Dulce</option>
+                    <option value="frutal">Frutal</option>
+                    <option value="caramelo">Caramelo</option>
+                    <option value="chocolate">Chocolate</option>
+                    <option value="floral">Floral</option>
+                    <option value="limón">Limón</option>
+                    <option value="vino">Vino</option>
+                    <option value="suave">Suave</option>
+                    <option value="intenso">Intenso</option>
+                    <option value="cítrico">Cítrico</option>
+                    <option value="cremoso">Cremoso</option>
+                </select>
+            </div>
+            
+            <br>
+
+            <button type="submit" class="btn btn-light">Obtener recomendaciones</button>
+
+
+        </form>
+
+    {% if mensaje_error %}
+        <div class="alert alert-warning mt-3">
+            {{ mensaje_error }}
+        </div>
+    {% endif %}
+
+    <div id="recomendaciones-container">
+        {% if recomendaciones %}
+            <h3 class="text-black text-center mt-5">✨ Recomendaciones personalizadas:</h3>
+            <div class="d-flex justify-content-center flex-wrap gap-4 mt-4">
+                {% for rec in recomendaciones %}
+                    <div class="col-md-4 producto">
+                        <h5>{{ rec }}</h5>
+                        <img src="{{ url_for('static', filename='images/' + nombre_a_imagen.get(rec, 'default.jpg')) }}"
+                            class="img-fluid rounded"
+                            onerror="this.onerror=null;this.src='/static/images/default.jpg';">
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+
+
+
+    {% if historial %}
+        <div id="historial-container">
+            <h4 class="text-black text-center mt-5">🕓 Productos que ya has probado:</h4>
+            <div class="d-flex flex-wrap gap-3 justify-content-center mt-3">
+                {% for prod in historial %}
+                    <div class="producto text-center p-3" style="width: 240px;">
+                        <h6>{{ prod }}</h6>
+                        <img src="{{ url_for('static', filename='images/' + nombre_a_imagen.get(prod, 'default.jpg')) }}"
+                            class="img-fluid rounded"
+                            onerror="this.onerror=null;this.src='/static/images/default.jpg';">
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
+
+    <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                    const usuariosRegistrados = JSON.parse('{{ usuarios_csv | tojson | safe }}');
+                    const formulario = document.getElementById("formulario");
+                    const nombreInput = document.getElementById("nombre");
+                    const perfilDiv = document.getElementById("perfil_sabor_group");
+                    const perfilSelect = document.getElementById("perfil");
+                    const recomendacionesDiv = document.getElementById("recomendaciones-container");
+                    const historialDiv = document.getElementById("historial-container");
+
+                    // Inicializar Choices.js
+                    const choices = new Choices(perfilSelect, {
+                        removeItemButton: true,
+                        maxItemCount: 3,
+                        placeholder: true,
+                        placeholderValue: 'Selecciona sabores',
+                        searchEnabled: false,
+                    });
+
+                    nombreInput.addEventListener("input", function () {
+                        const nombre = nombreInput.value.trim().toLowerCase();
+                        const esNuevo = !usuariosRegistrados.includes(nombre);
+                        perfilDiv.style.display = esNuevo ? "block" : "none";
+                    });
+
+                    nombreInput.addEventListener("focus", function () {
+                        if (recomendacionesDiv) {
+                            recomendacionesDiv.innerHTML = '';
+                        }
+                        if (historialDiv) {
+                            historialDiv.innerHTML = '';
+                        }
+                    });
+
+                    formulario.addEventListener("submit", function (e) {
+                        const nombre = nombreInput.value.trim().toLowerCase();
+                        const perfilSeleccionado = choices.getValue(true); // Array de valores seleccionados
+                        const esNuevo = !usuariosRegistrados.includes(nombre);
+
+                        if (esNuevo && perfilSeleccionado.length === 0) {
+                            e.preventDefault();
+                            alert("Por favor selecciona al menos un perfil de sabor.");
+                        }
+                    });
+                });
+    </script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>
