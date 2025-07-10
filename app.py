@@ -4,6 +4,8 @@ import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.cluster import KMeans
 
+import os
+
 app = Flask(__name__)
 
 # Cargar Imagenes
@@ -148,4 +150,5 @@ def recomendar_por_historial(usuario):
     return recomendaciones
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get('PORT', 5000))  # Render usa la variable de entorno PORT
+    app.run(host='0.0.0.0', port=port)
